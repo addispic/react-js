@@ -1,6 +1,10 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit'
 import axios from 'axios'
 
+// config
+// socket
+import {SOCKET} from '../../config'
+
 // initial state
 const initialState = {
     notes: [],
@@ -43,7 +47,12 @@ const notesSlice = createSlice({
     name: "notes",
     initialState,
     reducers: {
-
+        addNewNoteEvent: (state,action) => {
+            state.notes.push(action.payload)
+        },
+        deleteNoteEvent: (state,action) => {
+            state.notes = state.notes.filter(noteItem => noteItem._id !== action.payload)
+        },
     },
     extraReducers: builder =>{
         builder
@@ -71,7 +80,8 @@ const notesSlice = createSlice({
             .addCase(addNewNote.fulfilled, (state,action)=>{
                 state.isPosting = false
                 if(action.payload.note){
-                    state.notes.push(action.payload.note)
+                    SOCKET.emit("addNewNote",action.payload.note)
+                    // state.notes.push(action.payload.note)
                 }
             })
             // rejected
@@ -87,7 +97,8 @@ const notesSlice = createSlice({
             .addCase(deleteNote.fulfilled, (state,action)=>{
                 state.isDeleting = false 
                 if(action.payload?._id){
-                    state.notes = state.notes.filter(noteItem => noteItem._id !== action.payload._id)
+                    SOCKET.emit('deleteNote',action.payload?._id)
+                    // state.notes = state.notes.filter(noteItem => noteItem._id !== action.payload._id)
                 }
             })
             // rejected
@@ -104,6 +115,10 @@ export const notesSelector = state => state.notes.notes
 export const isPostingSelector = state => state.notes.isPosting
 // is deleting
 export const isDeletingSelector = state => state.notes.isDeleting
-
+// actions
+export const {
+    addNewNoteEvent,
+    deleteNoteEvent,
+} = notesSlice.actions
 // reducer
 export default notesSlice.reducer

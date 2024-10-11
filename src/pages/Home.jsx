@@ -1,14 +1,19 @@
 import React, { useEffect, useState, useRef } from "react";
 import {useDispatch, useSelector} from 'react-redux'
+import {formatDistanceToNow} from 'date-fns'
 
 // icons
 import { MdAttachFile } from "react-icons/md";
 import { GrSend } from "react-icons/gr";
 import { CiClock1 } from "react-icons/ci";
 
+// config
+// socket
+import {SOCKET} from '../config'
+
 // slices
 // notes
-import {getNotes,notesSelector,isPostingSelector,addNewNote, isDeletingSelector,deleteNote} from '../features/notes/notesSlice'
+import {getNotes,notesSelector,isPostingSelector,addNewNote, isDeletingSelector,deleteNote, addNewNoteEvent,deleteNoteEvent} from '../features/notes/notesSlice'
 
 const Home = () => {
 
@@ -59,6 +64,20 @@ const Home = () => {
     setText("")
   }
 
+  // add new note
+  useEffect(()=>{
+    SOCKET.on("addNewNoteEvent", note =>  {
+      dispatch(addNewNoteEvent(note))
+    })
+  },[])
+
+  // delete note
+  useEffect(()=>{
+    SOCKET.on("deleteNoteEvent", _id => {
+      dispatch(deleteNoteEvent(_id))
+    })
+  },[])
+
   return (
     <div className="bg-green-50/50 h-[92vh] flex flex-col">
       {/* list */}
@@ -76,7 +95,7 @@ const Home = () => {
                         {/* footer */}
                         <footer className="my-1.5 flex items-center gap-x-1 text-xs ">
                             <CiClock1 />
-                            <span>3 minute ago</span>
+                            <span>{formatDistanceToNow(new Date(noteItem.createdAt),{addSuffix: true})}</span>
                             {
                               isDeleting ? <div /> : 
                             <button onClick={()=>{
